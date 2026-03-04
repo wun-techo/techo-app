@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <!-- PWA 必備：讓手機全螢幕顯示、禁止縮放 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>一彣的信用卡回饋精算手帖</title>
+    
+    <!-- PWA 必備標籤 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#3A5A40">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="回饋手帖">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+        
+        :root {
+            --sage-green: #A3B18A;
+            --forest-dark: #3A5A40;
+            --techo-paper: #FCF8F3;
+            --earth-brown: #BC6C25;
+            --wax-seal: #D4A373;
+            --soft-glow: 0 20px 25px -5px rgba(58, 90, 64, 0.05), 0 10px 10px -5px rgba(58, 90, 64, 0.04);
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #DAD7CD; 
+            background-image: 
+                radial-gradient(#A3B18A 1px, transparent 1px),
+                linear-gradient(to right, #DAD7CD 0%, #E3E1D9 100%);
+            background-size: 30px 30px, 100% 100%;
+            /* 避免下拉更新干擾 PWA 體驗 */
+            overscroll-behavior-y: none;
+        }
+
+        .premium-card {
+            background-color: var(--techo-paper);
+            border-radius: 2.5rem;
+            box-shadow: var(--soft-glow);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s ease;
+        }
+
+        .wax-seal-badge {
+            background: linear-gradient(135deg, #D4A373 0%, #A98467 100%);
+            box-shadow: 0 4px 6px rgba(169, 132, 103, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .handwritten-label {
+            font-family: 'Noto Serif TC', serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* 輸入框質感 */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(4px);
+            border: 2px solid #E3E1D9;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-input:focus {
+            background: white;
+            border-color: var(--sage-green);
+            box-shadow: 0 0 0 4px rgba(163, 177, 138, 0.15);
+        }
+
+        /* 呼吸動畫 */
+        .float-gentle {
+            animation: floatGentle 4s infinite ease-in-out;
+        }
+        @keyframes floatGentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* 特殊質感按鈕 */
+        .btn-techo {
+            background-color: var(--forest-dark);
+            color: #FEFAE0;
+            box-shadow: 0 4px 0px #2A3F2D;
+            transition: all 0.2s;
+        }
+        .btn-techo:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px #2A3F2D;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex justify-center p-4 md:p-10">
+
+    <div class="w-full max-w-md flex flex-col gap-6 relative">
+        
+        <!-- Header -->
+        <div class="premium-card p-8 overflow-hidden relative border-none">
+            <div class="absolute -right-6 -top-6 opacity-5 rotate-12">
+                <i data-lucide="leaf" class="w-32 h-32 text-[#3A5A40]"></i>
+            </div>
+            
+            <div class="flex justify-between items-center z-10 relative">
+                <div>
+                    <span class="text-[10px] font-black tracking-[0.3em] text-[#A98467] uppercase mb-1 block">YI-WEN'S REWARDS JOURNAL</span>
+                    <h1 class="text-3xl font-black text-[#344E41] handwritten-label">
+                        信用卡回饋精算手帖
+                    </h1>
+                </div>
+                <button onclick="window.toggleRecordModal()" class="w-14 h-14 bg-[#CCD5AE] hover:bg-[#A3B18A] text-[#344E41] rounded-3xl transition-all shadow-md flex items-center justify-center">
+                    <i data-lucide="notebook" class="w-7 h-7"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- 搜尋與篩選區塊 -->
+        <div class="premium-card p-8 space-y-6">
+            <div class="space-y-3">
+                <label class="text-xs font-black text-[#6B705C] tracking-widest uppercase flex items-center gap-2">
+                    <i data-lucide="compass" class="w-3 h-3 text-[#A98467]"></i> 目的地搜尋
+                </label>
+                <input type="text" id="storeInput" placeholder="輸入店家（如：蝦皮、全聯、日本、威秀）" 
+                    class="w-full px-6 py-4 glass-input rounded-[1.8rem] focus:outline-none font-bold text-[#344E41] placeholder-[#A3B18A]">
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-xs font-black text-[#6B705C] tracking-widest uppercase flex items-center gap-2 ml-1">
+                    <i data-lucide="piggy-bank" class="w-3 h-3 text-[#A98467]"></i> 預算金額
+                </label>
+                <div class="relative">
+                    <input type="number" id="amountInput" placeholder="0" 
+                        class="w-full pl-12 pr-6 py-4 bg-white/60 border-2 border-[#E3E1D9] rounded-[1.8rem] focus:outline-none focus:border-[#A3B18A] transition-all font-black text-[#344E41] text-2xl">
+                    <span class="absolute left-6 top-1/2 -translate-y-1/2 font-black text-[#A3B18A] text-lg">$</span>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-[#E3E1D9]">
+                <div class="relative">
+                    <select id="categorySelect" 
+                        class="w-full py-4 px-6 appearance-none bg-white/40 border-2 border-[#E3E1D9] rounded-[1.5rem] text-sm text-[#344E41] font-bold outline-none focus:border-[#A3B18A] cursor-pointer">
+                        <option value="all">瀏覽權益手記...</option>
+                        <optgroup label="🧊 國泰世華 CUBE卡">
+                            <option value="cube_digital">💻 玩數位 (3.3%)</option>
+                            <option value="cube_shopping">🛍️ 樂饗購 (3.3%)</option>
+                            <option value="cube_travel">✈️ 趣旅行 (3.3%)</option>
+                            <option value="cube_select">🛒 集精選 (2.3%)</option>
+                            <option value="cube_japan">🌸 日本賞 (最高8%)</option>
+                            <option value="cube_megaport">🎸 瘋大港 (最高10%)</option>
+                            <option value="cube_birthday">🎂 慶生月 (最高10%)</option>
+                        </optgroup>
+                        <optgroup label="🐶 台新 Richart卡">
+                            <option value="taishin_richart_pay">📱 Pay著刷 (最高3.8%)</option>
+                            <option value="taishin_richart_daily">🏪 天天刷 (3.3%)</option>
+                            <option value="taishin_richart_big">🛍️ 大筆刷 (3.3%)</option>
+                            <option value="taishin_richart_dining">🍽️ 好饗刷 (3.3%)</option>
+                            <option value="taishin_richart_digital">🎮 數趣刷 (3.3%)</option>
+                            <option value="taishin_richart_travel">✈️ 玩旅刷 (3.3%)</option>
+                            <option value="taishin_richart_holiday">🏖️ 假日刷 (2%)</option>
+                        </optgroup>
+                        <optgroup label="🎮 星展 傳說對決聯名卡">
+                            <option value="dbs_aov_premium">🌟 娛樂/影音/生活 (10%)</option>
+                            <option value="dbs_aov_overseas">✈️ 國外一般消費 (2.5%)</option>
+                            <option value="dbs_aov_domestic">💳 國內一般消費 (1.2%)</option>
+                        </optgroup>
+                        <optgroup label="🎬 星展 饗樂生活卡">
+                            <option value="dbs_funlife_vieshow">🎬 電影饗樂 (6折起)</option>
+                            <option value="dbs_funlife_wowprime">🍽️ 美食饗樂 (9折)</option>
+                            <option value="dbs_funlife_kkday">✈️ 旅遊饗樂 (最優8折)</option>
+                            <option value="dbs_funlife_tigerair">✈️ 飛行饗樂 (88折起)</option>
+                        </optgroup>
+                        <optgroup label="🚆 聯邦 幸福M卡">
+                            <option value="ubot_m_transport">🚆 交通旅遊 (6%)</option>
+                            <option value="ubot_m_overseas">🌍 國外消費 (3%)</option>
+                            <option value="ubot_m_insurance">🛡️ 保費回饋 (1.2%)</option>
+                        </optgroup>
+                        <optgroup label="🌿 聯邦 綠卡">
+                            <option value="ubot_green_eco">🌿 綠色消費 (6%)</option>
+                            <option value="ubot_green_hilife">🏪 萊爾富 (5%現折)</option>
+                            <option value="ubot_green_life">💡 生活代扣繳 (1%)</option>
+                        </optgroup>
+                        <optgroup label="✨ 玉山 Unicard">
+                            <option value="esun_unicard_top100">✨ 百大特店 (最高4.5%)</option>
+                            <option value="esun_unicard_general">💳 一般消費 (1%)</option>
+                        </optgroup>
+                        <optgroup label="🌱 玉山 熊本熊卡">
+                            <option value="esun_kumamon_japan">🇯🇵 日本指定商店 (8.5%)</option>
+                            <option value="esun_kumamon_paypay">📱 日本PayPay (3.5%)</option>
+                            <option value="esun_kumamon_domestic">💳 國內一般 (1%)</option>
+                        </optgroup>
+                        <optgroup label="🐻 玉山 U Bear卡">
+                            <option value="esun_ubear_sub">🎮 影音娛樂 (10%)</option>
+                            <option value="esun_ubear_online">📱 國內外網購與行動支付 (3%)</option>
+                        </optgroup>
+                        <optgroup label="🌸 台北富邦 J卡">
+                            <option value="fubon_j_transit">🌸 日本交通卡 (10%)</option>
+                            <option value="fubon_j_travel_jk">✈️ 日韓實體旅遊 (6%)</option>
+                            <option value="fubon_j_travel_th">✈️ 泰國實體旅遊 (6%)</option>
+                            <option value="fubon_j_kkday">✈️ KKday (滿額折$500)</option>
+                            <option value="fubon_j_gift">🎁 日本伴手禮 (滿額提醒)</option>
+                            <option value="fubon_j_domestic">💳 國內一般消費 (1%)</option>
+                        </optgroup>
+                        <optgroup label="🐾 星展 eco永續卡">
+                            <option value="dbs_eco_overseas">✈️ 出國必備 (5%)</option>
+                            <option value="dbs_eco_green">🌱 eco消費 (10%)</option>
+                            <option value="dbs_eco_vieshow">🎬 感官體驗 (6折起)</option>
+                        </optgroup>
+                    </select>
+                    <i data-lucide="chevron-down" class="w-4 h-4 absolute right-5 top-1/2 -translate-y-1/2 text-[#A3B18A] pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 結果展示區 -->
+        <div id="resultsContainer" class="space-y-5 pb-16">
+            <div class="premium-card p-12 text-center space-y-6 fade-in border-none">
+                <div class="mx-auto w-24 h-24 bg-[#E9EDC9] rounded-[2.5rem] flex items-center justify-center float-gentle">
+                    <i data-lucide="sparkles" class="w-12 h-12 text-[#588157]"></i>
+                </div>
+                <div>
+                    <h2 class="text-[#344E41] font-black text-xl handwritten-label mb-2">翻開專屬於你的回饋頁面</h2>
+                    <p class="text-[13px] text-[#A98467] font-medium leading-relaxed">
+                        一彣，準備好今天要去哪裡消費了嗎？<br>輸入目的地，讓我為您挑選最優雅的卡片。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 紀錄 Modal -->
+    <div id="recordModal" class="hidden fixed inset-0 bg-[#344E41]/50 z-50 flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="premium-card w-full max-w-sm max-h-[85vh] flex flex-col fade-in border-none">
+            <div class="p-8 border-b border-[#E3E1D9] flex justify-between items-center">
+                <h2 class="text-[#344E41] font-black text-xl handwritten-label flex items-center gap-3">
+                    <i data-lucide="library" class="text-[#A98467]"></i> 手帖精算紀錄
+                </h2>
+                <button onclick="window.toggleRecordModal()" class="text-[#A98467] hover:text-[#344E41] transition-colors"><i data-lucide="circle-x"></i></button>
+            </div>
+            <div id="recordList" class="flex-1 overflow-y-auto p-8 space-y-4 hide-scrollbar"></div>
+            <div class="p-8 pt-0">
+                <button id="clearBtn" onclick="window.handleClear()" class="w-full py-4 bg-[#D4A373] text-white font-black rounded-[1.5rem] shadow-lg active:scale-[0.98] transition-all">
+                    清空手帖紀錄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知 Toast -->
+    <div id="toast" class="hidden fixed bottom-12 left-1/2 -translate-x-1/2 bg-[#3A5A40] text-[#FEFAE0] px-8 py-4 rounded-full shadow-2xl z-[100] text-sm font-black flex items-center gap-3 fade-in border border-white/20">
+        <i data-lucide="check" class="w-5 h-5 text-[#A3B18A]"></i>
+        <span id="toastMsg">成功！</span>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // ====== 信用卡完整資料庫 ======
+        const creditCardData = {
+            // 國泰 CUBE卡
+            "cube_digital": [{ catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "權益 3% + 一般 0.3%", name: "玩數位", rate: "3.3%", numRate: 3.3, baseRate: 0.3, cap: null, condition: "期間 26/01/01~26/06/30。需於APP切換「玩數位」。適用Apple/Google/Netflix/Disney+/Max等影音，ChatGPT/Claude/Gemini等AI工具，及蝦皮/momo/PChome/淘寶/酷澎/小樹購等網購。", keywords: ["玩數位", "蝦皮", "momo", "pchome", "coupang", "酷澎", "淘寶", "天貓", "小樹購", "netflix", "netfilx", "netfix", "網飛", "奈飛", "spotify", "apple", "google play", "disney", "youtube", "max", "chatgpt", "canva", "claude", "cursor", "duolingo", "gamma", "gemini", "notion", "perplexity", "speak", "網購", "串流", "ai工具"] }],
+            "cube_shopping": [{ catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "權益 3% + 一般 0.3%", name: "樂饗購", rate: "3.3%", numRate: 3.3, baseRate: 0.3, cap: null, condition: "期間 26/01/01~26/06/30。需於APP切換「樂饗購」。適用國內餐飲(含麥當勞/星巴克/拉亞/50嵐等)、UberEats/foodpanda、全台各大百貨(SOGO/新光/遠百/巨城/夢時代/華泰/LaLaport等)、康是美/屈臣氏。百貨店中櫃不適用。", keywords: ["樂饗購", "餐廳", "餐飲", "uber eats", "ubereats", "吳柏毅", "foodpanda", "外送", "sogo", "新光三越", "遠百", "遠東百貨", "101", "bellavita", "微風", "統一時代", "誠品", "att", "京站", "美麗華", "noke", "大葉高島屋", "lalaport", "宏匯", "台茂", "大江", "巨城", "中友", "廣三", "南紡", "耐斯", "夢時代", "漢神", "新月", "citylink", "秀泰", "環球", "太平洋", "華泰", "skm", "mitsui", "outlet", "百貨", "屈臣氏", "康是美", "麥當勞", "拉亞", "arabica", "黑沃", "subway", "50嵐", "五十嵐", "麻古", "六扇門", "八方雲集"] }],
+            "cube_travel": [{ catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "權益 3% + 一般 0.3%", name: "趣旅行", rate: "3.3%", numRate: 3.3, baseRate: 0.3, cap: null, condition: "期間 26/01/01~26/06/30。需於APP切換「趣旅行」。適用海外實體(含日本樂園)、各大航空、高鐵、Uber/Grab/和運等交通、Klook/KKday、Agoda/Booking等訂房網及指定旅行社。", keywords: ["趣旅行", "海外", "國外", "實體", "航空", "機票", "高鐵", "uber", "優步", "uber乘車", "grab", "yoxi", "台灣大車隊", "irent", "和運", "格上", "迪士尼", "哈利波特", "環球影城", "usj", "suica", "pasmo", "icoca", "華航", "長榮", "星宇", "虎航", "國泰", "樂桃", "阿聯酋", "酷航", "捷星", "日航", "ana", "亞航", "聯合", "新航", "越捷", "大韓", "達美", "土耳其", "卡達", "法國", "星野", "東橫", "klook", "kkday", "agoda", "airbnb", "booking", "trip.com", "易遊網", "雄獅", "可樂", "東南", "五福", "燦星", "山富", "長汎", "鳳凰", "ezfly", "易飛網", "理想", "永利", "三賀", "飯店", "住宿", "旅行社"] }],
+            "cube_select": [{ catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "權益 2% + 一般 0.3%", name: "集精選", rate: "2.3%", numRate: 2.3, baseRate: 0.3, cap: null, condition: "期間 26/01/01~26/06/30。需於APP切換「集精選」。適用7-11、全家、家樂福、全聯、LOPIA、中油直營站、IKEA，及U-POWER/EVOASIS/EVALUE/TAIL等充電、車麻吉/uTagGo等停車費。", keywords: ["集精選", "7-11", "全家", "超商", "家樂福", "全聯", "lopia", "中油", "加油", "ikea", "u-power", "evoasis", "evalue", "tail", "icharging", "充電", "車麻吉", "utaggo", "停車"] }],
+            "cube_birthday": [
+                { catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "慶生月加碼", name: "慶生月 (餐飲/娛樂)", rate: "10%", numRate: 10, baseRate: 0.3, cap: null, condition: "期間 26/01/01~26/03/31。限壽星生日當月切換。適用指定宜花東美食、餐酒館(如詹記/鼎王/二本松/紅葉蛋糕等)、KTV(錢櫃/好樂迪等)、日本樂園及任天堂/PS。", keywords: ["慶生月", "生日", "慶生", "櫻桃谷", "富美", "上乘三家", "燒肉吉室", "茶宴", "挪亞方舟", "樹懶", "九號咖啡", "肉肉餐桌", "歐鄉", "老時光", "火車頭", "小和山谷", "屋賀爺", "湯蒸", "beape", "tutto bello", "the 春", "香色", "galerie", "fugu", "creammm.t", "miss v", "紅葉蛋糕", "七見櫻堂", "plants", "里海", "日光私廚", "方正谷", "firns", "漁采", "uncle shawn", "二本松", "橋山", "pastaio", "詹記", "無老鍋", "鼎王", "小方舟", "毛丼", "毛房", "毛蔬", "森川丼丼", "將軍府", "好夥伴", "迪士尼", "環球影城", "usj", "playstation", "nintendo", "任天堂", "動畫瘋", "錢櫃", "好樂迪", "星聚點", "享溫馨"] },
+                { catName: "🧊 國泰CUBE", cardName: "國泰 CUBE卡", plan: "慶生月加碼", name: "慶生月 (百貨/外送)", rate: "3.5%", numRate: 3.5,

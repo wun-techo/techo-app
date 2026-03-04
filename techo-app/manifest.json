@@ -1,0 +1,21 @@
+{
+  "name": "一彣的信用卡回饋精算手帖",
+  "short_name": "回饋手帖",
+  "description": "最聰明的信用卡回饋精算與記帳工具",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#DAD7CD",
+  "theme_color": "#3A5A40",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
